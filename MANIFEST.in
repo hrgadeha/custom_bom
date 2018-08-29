@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include custom_bom *.css
+recursive-include custom_bom *.csv
+recursive-include custom_bom *.html
+recursive-include custom_bom *.ico
+recursive-include custom_bom *.js
+recursive-include custom_bom *.json
+recursive-include custom_bom *.md
+recursive-include custom_bom *.png
+recursive-include custom_bom *.py
+recursive-include custom_bom *.svg
+recursive-include custom_bom *.txt
+recursive-exclude custom_bom *.pyc
