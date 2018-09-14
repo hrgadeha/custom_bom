@@ -1,0 +1,190 @@
+
+
+frappe.ui.form.on("Sales Order Item", {
+	onload: function (frm, cdt, cdn) {
+		frappe.require([
+			"assets/erpnext/js/myTables.js",
+			"assets/erpnext/css/myTable.css"
+		]);
+
+	}
+})
+
+frappe.ui.form.on("Sales Order Item", {
+	quantity: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var width = 0;
+		if (isNaN(item.width)) {
+			width = 0
+		} else {
+			width = item.width
+		}
+		if (isNaN(item.length)) {
+			length = 0
+			console.log("if");
+		} else {
+			length = item.length
+			console.log("else");
+		}
+		var total_sub = (length * width) / 1000000
+		var total = parseFloat(item.quantity * total_sub)
+		frappe.model.set_value(cdt, cdn, "qty", total);
+
+
+	},
+	length: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var width = 0;
+		if (isNaN(item.width)) {
+			width = 0
+		} else {
+			width = item.width
+		}
+		var total_sub = (item.length * width) / 1000000
+		var total = parseFloat(item.quantity * total_sub)
+		frappe.model.set_value(cdt, cdn, "qty", total);
+
+
+	},
+	width: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var length = 0;
+		if (isNaN(item.length)) {
+			length = 0
+			console.log("if");
+		} else {
+			length = item.length
+			console.log("else");
+		}
+		var total_sub = (length * item.width) / 1000000
+		var total = parseFloat(item.quantity * total_sub)
+		console.log(total);
+		frappe.model.set_value(cdt, cdn, "qty", total);
+
+
+	},
+	bom_no: function (frm, cdt, cdn) {
+		
+	}
+});
+
+
+frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
+	var d2 = locals[cdt][cdn];
+
+	frappe.call({
+		"method": "custom_bom.api.getBOMList",
+		args: {
+			item_code: d2.item_code
+		},
+		callback: function (r, rt) {
+			if (r.message != ' ' || r.message != null) {
+			var bom_popup = new frappe.ui.Dialog({
+				'title': 'BOM Detail',
+				'fields': [{
+					fieldname: 'batches',
+					fieldtype: 'HTML'
+				}]
+			});
+
+			var datta = '<a style="display:block;background-color:blue;width: 115px;height:35px;padding: 10px;text-align:center;border-radius: 5px;color:white" href="#Form/BOM/New BOM 1">New BOM</a></br>';
+			var dataa = datta + '<table border="1" width="100%" id="popTable"><tr><th>Bom No</th><th>Item Name</th><th>Sell Price</th></tr>';
+			var dataa1 = '<table id="myTable"  border="1" class="" width="100%"><tr><td width="10%">Item Code</td><td width="20%">Item Name</td><td width="10%">Item Group</td><td width="10%">Qty</td><td width="10%">rate</td><td data-row="2" data-col="6" width="10%">Amount</td></tr>';
+			
+				$.each(r.message, function (idx, obj) {
+					dataa = dataa + '<tr><td name="name">' + obj["name"] + '</td><td>' + obj["item_name"] + '</td><td>' + obj["total_cost"] + '</td></tr>';
+				});
+				dataa = dataa + '</table>';
+				
+				bom_popup.fields_dict.batches.$wrapper.html(dataa);
+				bom_popup.show();
+				bom_popup.fields_dict.batches.$wrapper.on('click', 'td[name=name]', function (e) {
+				bom_popup.hide();
+					var bom_name = $(this).text();
+					
+					console.log("BOM No = " + JSON.stringify(bom_name))
+					frappe.call({
+						"method": "custom_bom.api.getBomDetail",
+						args: {
+							bom_no: bom_name
+						},
+						callback: function (r, rt) {
+							console.log("response message = "+ JSON.stringify(r.message))
+							data = r.message.items
+							var material_popup = new frappe.ui.Dialog({
+								'title': 'Select Material',
+								'fields': [{
+										fieldname: 'material',
+										fieldtype: 'Table',
+										fields: [
+													{
+														fieldtype:'Link',
+														fieldname:'item_code',
+														options: 'Item',
+														label: __('Item Code'),
+														in_list_view:1,
+														get_query: function() {
+													
+														}
+													},{
+														fieldtype:'Data',
+														fieldname:'item_name',
+														options: 'item_code.item_name',
+														label: __('Item Name'),
+														in_list_view:1
+													},{
+														fieldtype:'Link',
+														fieldname:'item_group',
+														options: 'Item Group',
+														label: __('Item Group'),
+														in_list_view:1
+													},{
+														fieldtype:'Float',
+														fieldname:'qty',
+														label: __('Qty'),
+														in_list_view:1
+													},{
+														fieldtype:'Currency',
+														fieldname:'rate',
+														label: __('Rate'),
+														in_list_view:1
+													},{
+														fieldtype:'Currency',
+														fieldname:'amount',
+														label: __('Amount'),
+														in_list_view:1
+													}
+												],
+										in_place_edit: true,
+										data: data,
+										get_data: function() {
+											return data;
+										}
+								}],
+								primary_action: function(){
+									material_popup.hide();
+									console.log(material_popup.fields[0].data);
+								}
+							});
+							material_popup.show();
+						}
+					})
+				})	
+			}
+		}
+	});
+});
+
+/*
+this.dialog.set_primary_action(__('Insert'), function() {
+			me.values = me.dialog.get_values();
+			if(me.validate()) {
+				me.set_items();
+				me.dialog.hide();
+			}
+		});
+		
+		
+		
+		this.dialog.fields_dict.batches.grid.refresh();
+		*/
