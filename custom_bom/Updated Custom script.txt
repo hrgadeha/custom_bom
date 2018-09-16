@@ -10,68 +10,10 @@ frappe.ui.form.on("Sales Order Item", {
 	}
 })
 
-frappe.ui.form.on("Sales Order Item", {
-	quantity: function (frm, cdt, cdn) {
-		var item = locals[cdt][cdn];
-		var width = 0;
-		if (isNaN(item.width)) {
-			width = 0
-		} else {
-			width = item.width
-		}
-		if (isNaN(item.length)) {
-			length = 0
-			console.log("if");
-		} else {
-			length = item.length
-			console.log("else");
-		}
-		var total_sub = (length * width) / 1000000
-		var total = parseFloat(item.quantity * total_sub)
-		frappe.model.set_value(cdt, cdn, "qty", total);
-
-
-	},
-	length: function (frm, cdt, cdn) {
-		var item = locals[cdt][cdn];
-		var width = 0;
-		if (isNaN(item.width)) {
-			width = 0
-		} else {
-			width = item.width
-		}
-		var total_sub = (item.length * width) / 1000000
-		var total = parseFloat(item.quantity * total_sub)
-		frappe.model.set_value(cdt, cdn, "qty", total);
-
-
-	},
-	width: function (frm, cdt, cdn) {
-		var item = locals[cdt][cdn];
-		var length = 0;
-		if (isNaN(item.length)) {
-			length = 0
-			console.log("if");
-		} else {
-			length = item.length
-			console.log("else");
-		}
-		var total_sub = (length * item.width) / 1000000
-		var total = parseFloat(item.quantity * total_sub)
-		console.log(total);
-		frappe.model.set_value(cdt, cdn, "qty", total);
-
-
-	},
-	bom_no: function (frm, cdt, cdn) {
-		
-	}
-});
-
-
-frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
+frappe.ui.form.on("Sales Order Item",{
+	item_code : function (frm, cdt, cdn){
 	var d2 = locals[cdt][cdn];
-
+	if(d2.item_code){
 	frappe.call({
 		"method": "custom_bom.api.getBOMList",
 		args: {
@@ -87,18 +29,24 @@ frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
 				}]
 			});
 
-			var datta = '<a style="display:block;background-color:blue;width: 115px;height:35px;padding: 10px;text-align:center;border-radius: 5px;color:white" href="#Form/BOM/New BOM 1">New BOM</a></br>';
-			var dataa = datta + '<table border="1" width="100%" id="popTable"><tr><th>Bom No</th><th>Item Name</th><th>Sell Price</th></tr>';
-			var dataa1 = '<table id="myTable"  border="1" class="" width="100%"><tr><td width="10%">Item Code</td><td width="20%">Item Name</td><td width="10%">Item Group</td><td width="10%">Qty</td><td width="10%">rate</td><td data-row="2" data-col="6" width="10%">Amount</td></tr>';
+		//	var datta = '<a style="display:block;background-color:blue;width: 115px;height:35px;padding: 10px;text-align:center;border-radius: 5px;color:white" href="#Form/BOM/New BOM 1">New BOM</a></br>';
+			var dataa =   '<table border="1" width="100%" id="popTable"><tr><th width="20%">Bom No</th><th width="25%">Item Name</th><th width="10%">Sell Price</th><th width="10%">Select Price</th><th width="20%">Edit</th></tr>';
+		//	var dataa1 = '<table id="myTable"  border="1" class="" width="100%"><tr><td width="10%">Item Code</td><td width="20%">Item Name</td><td width="10%">Item Group</td><td width="10%">Qty</td><td width="10%">rate</td><td data-row="2" data-col="6" width="10%">Amount</td><td data-row="2" data-col="6" width="10%">Select same it is</td><td data-row="2" data-col="6" width="10%">Edit</td></tr>';
 			
 				$.each(r.message, function (idx, obj) {
-					dataa = dataa + '<tr><td name="name">' + obj["name"] + '</td><td>' + obj["item_name"] + '</td><td>' + obj["total_cost"] + '</td></tr>';
+					dataa = dataa + '<tr><td name="name">' + obj["name"] + '</td><td>' + obj["item_name"] + '</td><td>' + obj["total_cost"] + '</td><td name="select">'+obj["total_cost"] +'</td><td name="edit">'+obj["name"] +'</td></tr>';
 				});
 				dataa = dataa + '</table>';
 				
 				bom_popup.fields_dict.batches.$wrapper.html(dataa);
 				bom_popup.show();
-				bom_popup.fields_dict.batches.$wrapper.on('click', 'td[name=name]', function (e) {
+				bom_popup.fields_dict.batches.$wrapper.on('click', 'td[name=select]', function (e) {
+				// var bom_name = $(this).text();
+				 d2.rate = $(this).text();
+				 frm.refresh_field("items");
+				 bom_popup.hide();
+				});
+				bom_popup.fields_dict.batches.$wrapper.on('click', 'td[name=edit]', function (e) {
 				bom_popup.hide();
 					var bom_name = $(this).text();
 					
@@ -129,15 +77,16 @@ frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
 													},{
 														fieldtype:'Data',
 														fieldname:'item_name',
-														options: 'item_code.item_name',
 														label: __('Item Name'),
+														default:'item_code.item_name',
 														in_list_view:1
 													},{
 														fieldtype:'Link',
 														fieldname:'item_group',
 														options: 'Item Group',
 														label: __('Item Group'),
-														in_list_view:1
+														in_list_view:1,
+														default:'item_code.item_group'
 													},{
 														fieldtype:'Float',
 														fieldname:'qty',
@@ -155,7 +104,6 @@ frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
 														in_list_view:1
 													}
 												],
-										in_place_edit: true,
 										data: data,
 										get_data: function() {
 											return data;
@@ -163,7 +111,24 @@ frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
 								}],
 								primary_action: function(){
 									material_popup.hide();
-									console.log(material_popup.fields[0].data);
+									console.log(material_popup.get_values().material);
+									
+										frappe.call({
+											"method": "custom_bom.api.saveBOM",
+											args: {
+												item :d2.item_code,
+												currency :'INR',
+												items : material_popup.get_values().material
+												
+											},
+											callback: function (r, rt) {
+												d2.rate = r.message.total_cost
+												frm.refresh_field("items")
+												material_popup.hide();
+												
+											}
+										})
+									
 								}
 							});
 							material_popup.show();
@@ -173,6 +138,32 @@ frappe.ui.form.on("Sales Order Item", "item_code", function (frm, cdt, cdn) {
 			}
 		}
 	});
+	}
+	},
+	qty: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var total_sub = (item.length * item.width) / 1000000
+		var total = parseFloat(item.qty * total_sub)
+		item.qty = total;
+		console.log("qty" + total)
+		frm.refresh_field("items");
+	},
+	length: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var total_sub = (item.length * item.width) / 1000000
+		var total = parseFloat(item.qty * total_sub)
+		item.qty = total;
+		console.log("length" + total)
+		frm.refresh_field("items");
+	},
+	width: function (frm, cdt, cdn) {
+		var item = locals[cdt][cdn];
+		var total_sub = (item.length * item.width) / 1000000
+		var total = parseFloat(item.qty * total_sub)
+		item.qty = total;
+		console.log("width" + total)
+		frm.refresh_field("items");
+	}
 });
 
 /*
