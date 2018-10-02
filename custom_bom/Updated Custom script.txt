@@ -19,6 +19,8 @@ frappe.ui.form.on("Sales Order Item",{
 		args: {
 			item_code: d2.item_code
 		},
+		freeze: true,
+		freeze_message: __("Loading"),
 		callback: function (r, rt) {
 			if (r.message != ' ' || r.message != null) {
 			var bom_popup = new frappe.ui.Dialog({
@@ -43,6 +45,8 @@ frappe.ui.form.on("Sales Order Item",{
 				bom_popup.fields_dict.batches.$wrapper.on('click', 'td[name=select]', function (e) {
 				// var bom_name = $(this).text();
 				 d2.rate = $(this).text();
+				 d2.amount = d2.rate * d2.qty
+				 frm.trigger("calculate_taxes_and_totals")
 				 frm.refresh_field("items");
 				 bom_popup.hide();
 				});
@@ -56,6 +60,8 @@ frappe.ui.form.on("Sales Order Item",{
 						args: {
 							bom_no: bom_name
 						},
+						freeze: true,
+						freeze_message: __("Loading"),
 						callback: function (r, rt) {
 							console.log("response message = "+ JSON.stringify(r.message))
 							data = r.message.items
@@ -73,6 +79,9 @@ frappe.ui.form.on("Sales Order Item",{
 														in_list_view:1,
 														get_query: function() {
 													
+														},
+														refresh:function(){
+															frappe.msgprint("asd")
 														}
 													},{
 														fieldtype:'Data',
@@ -121,8 +130,12 @@ frappe.ui.form.on("Sales Order Item",{
 												items : material_popup.get_values().material
 												
 											},
+											freeze: true,
+											freeze_message: __("Loading"),
 											callback: function (r, rt) {
 												d2.rate = r.message.total_cost
+												d2.amount = d2.rate * d2.qty
+												frm.trigger("calculate_taxes_and_totals")
 												frm.refresh_field("items")
 												material_popup.hide();
 												
@@ -178,4 +191,8 @@ this.dialog.set_primary_action(__('Insert'), function() {
 		
 		
 		this.dialog.fields_dict.batches.grid.refresh();
+		
+		https://github.com/frappe/erpnext/blob/096b943b0cab3807777dee933a725299fc810766/erpnext/buying/doctype/request_for_quotation/request_for_quotation.js
 		*/
+		
+	
