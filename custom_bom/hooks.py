@@ -75,17 +75,22 @@ app_license = "MIT"
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
-# Document Events
-# ---------------
-# Hook on document methods and events
+#Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+ 	"Sales Invoice": {
+ 		"on_submit": "custom_bom.custom_bom.doctype.sales_invoice_length_width.si_length_width"
+	},
+	"Delivery Note": {
+ 		"on_submit": "custom_bom.custom_bom.doctype.sales_invoice_length_width.si_length_width"
+	},
+	"Quotation": {
+ 		"on_submit": "custom_bom.custom_bom.doctype.sales_invoice_length_width.si_length_width"
+	},
+	"Sales Order": {
+ 		"on_submit": "custom_bom.custom_bom.doctype.sales_invoice_length_width.si_length_width"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
